@@ -1,0 +1,36 @@
+@startuml
+title Trade validation
+
+start
+:Receive one trade;
+if (JSON shape and field rules valid?) then (yes)
+else (no)
+  :422 validation_error;
+  stop
+endif
+
+if (maturity_date >= business date\nin BUSINESS_TIMEZONE?) then (yes)
+else (no)
+  :422 maturity_in_past;
+  stop
+endif
+
+:Lock the trade id;
+if (A current row exists?) then (no)
+  :Insert version\nexpired = false\nserver updated_date;
+  :201 Created;
+  stop
+else (yes)
+  if (incoming version < stored version?) then (yes)
+    :Leave the row unchanged;
+    :409 version_conflict;
+    stop
+  else (no)
+    :Replace economic fields;
+    :Keep created_date;
+    :Set expired = false and refresh updated_date;
+    :200 OK;
+    stop
+  endif
+endif
+@enduml

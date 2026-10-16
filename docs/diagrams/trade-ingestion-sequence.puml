@@ -1,0 +1,31 @@
+@startuml
+title Trade ingestion
+
+actor Client
+participant "API" as API
+participant "TradeService" as Service
+participant "TradeRepository" as Repository
+database "PostgreSQL" as DB
+
+Client -> API : POST /trades or one bulk item
+API -> Service : validated trade
+Service -> Service : reject maturity before business date
+Service -> Repository : apply inside a transaction
+Repository -> DB : pg_advisory_xact_lock(trade_id)
+Repository -> DB : SELECT ... FOR UPDATE
+alt no current row
+  Repository -> DB : INSERT
+  DB --> API : 201 Created
+else incoming version >= stored version
+  Repository -> DB : UPDATE, preserve created_date
+  DB --> API : 200 OK
+else incoming version < stored version
+  Repository -> DB : rollback
+  DB --> API : 409 Conflict
+end
+
+note over Client, DB
+  Bulk requests repeat this sequence once per item.
+  Each item has its own transaction, in input order.
+end note
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+title Trade Store components
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor Client
+component "API\nFastAPI" as API
+component "Migrate\nAlembic" as Migrate
+component "Expiry worker" as Worker
+database "PostgreSQL\ntrades" as DB
+
+Client --> API : REST
+API --> DB : read and versioned write
+Migrate --> DB : upgrade schema
+Worker --> DB : mark matured trades expired
+@enduml
