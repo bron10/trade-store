@@ -64,7 +64,7 @@ jobs:
         run: uv run pip-audit --requirement /tmp/requirements.txt --progress-spinner off
 
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -86,7 +86,7 @@ jobs:
         run: docker build --tag trade-store:ci .
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: image
           image-ref: trade-store:ci
