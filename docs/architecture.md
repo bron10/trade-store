@@ -16,8 +16,6 @@
 
 `main.py` builds the app, dependency wiring, and error handlers. Business rules are not placed there.
 
-The injectable clock (`SystemClock` or `FixedClock`) supplies the UTC instant and the business date. Tests use `FixedClock` so date boundaries do not depend on the wall clock.
-
 ## Data flow
 
 1. FastAPI validates the JSON shape for a single trade, or accepts the bulk envelope and validates each element separately.
