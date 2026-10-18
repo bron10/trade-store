@@ -17,7 +17,7 @@ endif
 
 :Lock the trade id;
 if (A current row exists?) then (no)
-  :Insert version\nexpired = false\nserver updated_date;
+  :Insert version\nexpired = false\nserver store timestamps;
   :201 Created;
   stop
 else (yes)
@@ -27,8 +27,8 @@ else (yes)
     stop
   else (no)
     :Replace economic fields;
-    :Keep created_date;
-    :Set expired = false and refresh updated_date;
+    :Keep created_date and store_created_at;
+    :Set expired = false and refresh store_updated_at;
     :200 OK;
     stop
   endif
