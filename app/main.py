@@ -6,8 +6,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.health import router as health_router
-
-
 from app.config import Settings, get_settings
 from app.db.session import make_engine, make_session_factory
 from app.errors import AppError, error_payload, redact, validation_details
