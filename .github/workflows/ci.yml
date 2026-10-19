@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, test, and audit dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      BUSINESS_TIMEZONE: UTC
+      LOG_LEVEL: WARNING
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: trade
+          POSTGRES_PASSWORD: trade
+          POSTGRES_DB: trade_store_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U trade -d trade_store_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv and Python 3.12
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format
+        run: uv run ruff format --check .
+
+      - name: Test
+        run: uv run pytest
+
+      - name: Export production requirements
+        run: uv export --frozen --no-dev --no-emit-project --format requirements-txt --output-file /tmp/requirements.txt
+
+      - name: pip-audit
+        run: uv run pip-audit --requirement /tmp/requirements.txt --progress-spinner off
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL
+          exit-code: "1"
+          ignore-unfixed: false
+
+  image:
+    name: Build image and scan it
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build --tag trade-store:ci .
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: trade-store:ci
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL
+          exit-code: "1"
+          ignore-unfixed: false

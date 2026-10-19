@@ -1,4 +1,8 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.12-slim-trixie
+
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /uvx /bin/
 
