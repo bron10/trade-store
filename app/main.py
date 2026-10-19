@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.health import router as health_router
+from app.api.trades import router as trades_router
 from app.config import Settings, get_settings
 from app.db.session import make_engine, make_session_factory
 from app.errors import AppError, error_payload, redact, validation_details
@@ -26,6 +27,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.engine = make_engine(settings.database_url)
     application.state.session_factory = make_session_factory(application.state.engine)
     application.include_router(health_router)
+    application.include_router(trades_router)
     _register_handlers(application)
     return application
 
