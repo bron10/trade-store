@@ -1,5 +1,9 @@
 FROM python:3.12-slim-bookworm
 
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
+    
 COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /uvx /bin/
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin appuser
